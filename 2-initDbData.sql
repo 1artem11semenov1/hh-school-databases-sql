@@ -49,7 +49,7 @@ SELECT
   title
 FROM rand_vacancies;
 
-WITH rand_resumes(id, first_name, second_name, email, experience, area_id, create_date, specialisation_id) AS (
+WITH rand_resumes(id, first_name, second_name, email, experience, area_id, create_date, specialisation_id, title) AS (
   SELECT
     generate_series(1,100000) AS id,
     md5(random()::text) AS first_name,
@@ -58,9 +58,10 @@ WITH rand_resumes(id, first_name, second_name, email, experience, area_id, creat
     floor(random() * 50 + 1)::int AS experience,
     floor(random() * 10 + 1)::int AS area_id,
     '2020-01-01'::date + (random() * (CURRENT_DATE - '2020-01-01'::date))::int AS create_date,
-    floor(random() * 500 + 1)::int AS specialisation_id
+    floor(random() * 500 + 1)::int AS specialisation_id,
+    md5(random()::text) AS title
 )
-INSERT INTO resumes (first_name, second_name, email, experience, area_id, create_date, specialisation_id)
+INSERT INTO resumes (first_name, second_name, email, experience, area_id, create_date, specialisation_id, title)
 SELECT
   first_name,
   second_name,
@@ -68,19 +69,22 @@ SELECT
   experience,
   area_id,
   create_date,
-  specialisation_id
+  specialisation_id,
+  title
 FROM rand_resumes;
 
-WITH rand_responses(id, vacancy_id, resume_id, response_date) AS (
-  SELECT
-    generate_series(1,1000000) AS id,
-    floor(random() * 10000 + 1)::int AS vacancy_id,
-    floor(random() * 100000 + 1)::int AS resume_id,
-    '2020-01-01'::date + (random() * (CURRENT_DATE - '2020-01-01'::date))::int AS response_date
-)
 INSERT INTO responses (vacancy_id, resume_id, response_date)
 SELECT
-  vacancy_id,
-  resume_id,
-  response_date
-FROM rand_responses;
+  v.id AS vacancy_id,
+  r.id AS resume_id,
+  v.create_date + (random() * (CURRENT_DATE - v.create_date))::int
+FROM
+  resumes r
+  CROSS JOIN LATERAL (
+    SELECT
+      id,
+      create_date
+    FROM vacancies
+    ORDER BY random()
+    LIMIT 10
+  ) v;

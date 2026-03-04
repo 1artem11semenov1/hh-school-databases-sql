@@ -18,8 +18,8 @@ CREATE TABLE vacancies (
   id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   compensation_from integer,
   compensation_to integer,
-  create_date date,
-  title text,
+  create_date date DEFAULT now(),
+  title text NOT NULL,
   specialisation_id integer NOT NULL REFERENCES specialisations(id),
   employer_id integer NOT NULL REFERENCES employers(id)
 );
@@ -31,13 +31,14 @@ CREATE TABLE resumes (
   email text,
   experience integer,
   area_id integer,
-  create_date date,
+  title text NOT NULL,
+  create_date date DEFAULT now(),
   specialisation_id integer NOT NULL REFERENCES specialisations(id)
 );
 
 CREATE TABLE responses (
-  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   vacancy_id integer NOT NULL REFERENCES vacancies(id),
   resume_id integer NOT NULL REFERENCES resumes(id),
-  response_date date
+  response_date date,
+  PRIMARY KEY (vacancy_id, resume_id)
 );
